@@ -1,9 +1,8 @@
 // src/pages/Login.jsx
 import React, { useState } from "react";
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { sendOtp } from "../api/auth";
-
 
 export default function Login() {
   const navigate = useNavigate();
@@ -12,68 +11,70 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
-
   const handleLogin = async () => {
     setError("");
-
 
     if (!phone.trim()) {
       setError("Please enter mobile number");
       return;
     }
 
-
     if (phone.length !== 10) {
       setError("Mobile number must be 10 digits");
       return;
     }
 
-
     setLoading(true);
-
 
     try {
       const formattedPhone = `+91${phone}`;
       const response = await sendOtp(formattedPhone);
 
-
-      if (response.data.success) {
-        navigate("/otp-verification", { state: { phone: formattedPhone } });
+      if (response?.data?.success) {
+        navigate("/otp-verification", {
+          state: { phone: formattedPhone },
+        });
       } else {
-        setError(response.data.message || "Failed to send OTP");
+        setError(response?.data?.message || "Failed to send OTP");
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError("Server error, try again");
+
+      // ✅ show backend error if available
+      setError(
+        err?.response?.data?.message ||
+        "Server error. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+  // ✅ FIX: use onKeyDown instead of onKeyPress
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
       handleLogin();
     }
   };
-
 
   return (
     <Background>
       <Card>
         <Title>Student Login</Title>
-        
-        {error && <ErrorMsg>{error}</ErrorMsg>}
 
+        {error && <ErrorMsg>{error}</ErrorMsg>}
 
         <InputGroup>
           <CountryPrefix>+91</CountryPrefix>
+
           <InputWrapper>
             <Input
               placeholder=" "
               value={phone}
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-              onKeyPress={handleKeyPress}
+              onChange={(e) =>
+                setPhone(e.target.value.replace(/\D/g, ""))
+              }
+              onKeyDown={handleKeyDown}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               maxLength={10}
@@ -85,18 +86,18 @@ export default function Login() {
           </InputWrapper>
         </InputGroup>
 
-
-        <Button onClick={handleLogin} disabled={loading || phone.length !== 10}>
+        <Button
+          onClick={handleLogin}
+          disabled={loading || phone.length !== 10}
+        >
           {loading ? "Sending OTP..." : "Send OTP"}
         </Button>
-
 
         <InfoText>You will receive a 4-digit code</InfoText>
       </Card>
     </Background>
   );
 }
-
 
 // Styled Components
 
