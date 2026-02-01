@@ -9,17 +9,15 @@ dotenv.config();
 
 const app = express();
 
-/* ✅ CORS FIX */
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "https://food-ordering-portal.vercel.app" // replace if different
-];
-
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // allow localhost (dev) + all vercel apps
+      if (
+        !origin ||
+        origin.startsWith("http://localhost") ||
+        origin.endsWith(".vercel.app")
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -31,10 +29,8 @@ app.use(
 
 app.use(bodyParser.json());
 
-// API routes
 app.use("/api/auth", authRoutes);
 
-// Test route
 app.get("/", (req, res) => {
   res.json({ message: "Backend is running!" });
 });
